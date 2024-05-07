@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #
 # Copyright (C) 2014  Anthony King
@@ -17,12 +17,12 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
-
 import binascii
 import os
 import struct
 import sys
+import hashlib
+import math
 
 # Proof of Concept
 POC = False
@@ -55,7 +55,9 @@ def get_kernel_size(image_name):
 
 def bumped(image_data):
     d = binascii.hexlify(image_data[-1024:])
-    return d.endswith(lg_magic) or d.startswith(lg_magic)
+    print(type(d))
+    print(lg_magic.encode("ASCII"), type(lg_magic.encode("ASCII")))
+    return d.endswith(lg_magic.encode("ASCII")) or d.startswith(lg_magic.encode("ASCII"))
 
 
 def pair_reverse(s):
@@ -78,7 +80,10 @@ def get_size_from_kernel(f_image, page_size, seek_size):
 def pad_image(image_name):
     page_size = get_page_size(image_name)
     image_size = os.path.getsize(image_name)
-    num_pages = image_size / page_size
+    num_pages = int(image_size / page_size)
+    print("page_size", page_size, type(page_size))
+    print("image_size", image_size, type(image_size))
+    print("num_pages", num_pages, type(num_pages))
 
     calculated_size = get_kernel_size(image_name)
 
@@ -98,9 +103,11 @@ def pad_image(image_name):
                 i = num_pages - 1
                 f_image.seek(0, 0)
                 while i >= 0:
+                    print("page size", page_size, type(page_size))
+                    print("i", i, type(i))
                     f_image.seek(page_size * i, 0)
                     data = f_image.read(page_size)
-                    data = data.split('\x00')[0]
+                    data = data.split(b'\x00')[0]
                     if not data:
                         f_image.truncate(page_size * i)
                         i -= 1
